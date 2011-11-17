@@ -119,7 +119,7 @@ int main() {
 		pthread_join(passengers[i],NULL);
 	}
 	pthread_join(carrier,NULL);
-
+//testando o github!
 	return 0;
 }
 
