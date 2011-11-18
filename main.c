@@ -7,11 +7,18 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <semaphore.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/stat.h>
+#include <sys/file.h>
+#include <sys/types.h>
+
 #define MAX_PASSENGERS 15
+#define LEN 50
+#define FNAME "FIFO"
 
 sem_t mutex,boat,cross_start,cross_end,mutex2,in,mutex3;
 int count=0,inside=0,fatboy,if_fuck=0;
@@ -66,13 +73,30 @@ void *boatman() {
 		printf("Barqueiro espera todos atravessarem o matagal...\n");
 		sem_wait(&mutex2);
 		sem_wait(&mutex3);
-		printf("IF FUCK: %d\n",if_fuck);
+
 		if (if_fuck){
 			printf("Opa! Problemas! Os segurancas pegaram um! Acabou meu esquema...\n");
-
-			//TODO: Codigo do named pipe!
-
-			exit(1);
+			mkfifo(FNAME,0660);
+			int id;
+			
+			id = fork();
+			if ( id < 0) {
+				printf("Erro na criacao do filho...Abortando...\n");
+				exit(1);
+			}else if (id == 0){
+				do {
+					fd=open(FNAME,O_WRONLY);
+					if (fd==-1) sleep(1);
+				}while (fd==-1);
+				
+				sprintf(msg,"O caminho mais curto nem sempre eh o mais direito...\n");
+				write(fd,msg,strlen(msg)+1);
+				close(fd);
+				
+				exit(1);
+			}else{
+				raise(SIGINT);
+			}
 		}
 		sem_post(&mutex3);
 		sleep(2);
@@ -100,8 +124,7 @@ int main() {
 
 	srand(time(NULL));
 	fatboy = rand()%15;
-	printf("OLHA O GORDO: %d\n",fatboy);
-	sleep(2);
+
 	long *taskid[MAX_PASSENGERS];
 
 	for(int i=0;i<MAX_PASSENGERS;i++) {
@@ -119,7 +142,7 @@ int main() {
 		pthread_join(passengers[i],NULL);
 	}
 	pthread_join(carrier,NULL);
-//testando o github!
+
 	return 0;
 }
 
