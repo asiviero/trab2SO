@@ -76,18 +76,27 @@ void *boatman() {
 
 		if (if_fuck){
 			printf("Opa! Problemas! Os segurancas pegaram um! Acabou meu esquema...\n");
-
 			mkfifo(FNAME,0660);
-			do {
-				fd=open(FNAME,O_WRONLY);
-				if (fd==-1) sleep(1);
-			}while (fd==-1);
+			int id;
 			
-			sprintf(msg,"O caminho mais curto nem sempre eh o mais direito...\n");
-			write(fd,msg,strlen(msg)+1);
-			close(fd);
-			
-			exit(1);
+			id = fork();
+			if ( id < 0) {
+				printf("Erro na criacao do filho...Abortando...\n");
+				exit(1);
+			}else if (id == 0){
+				do {
+					fd=open(FNAME,O_WRONLY);
+					if (fd==-1) sleep(1);
+				}while (fd==-1);
+				
+				sprintf(msg,"O caminho mais curto nem sempre eh o mais direito...\n");
+				write(fd,msg,strlen(msg)+1);
+				close(fd);
+				
+				exit(1);
+			}else{
+				raise(SIGINT);
+			}
 		}
 		sem_post(&mutex3);
 		sleep(2);
