@@ -1,17 +1,18 @@
-/*
- * main.c
- *
- *  Created on: Nov 16, 2011
- *      Author: andre
- */
-
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <semaphore.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <time.h>
+#include <signal.h>
+#include <sys/stat.h>
+#include <sys/file.h>
+#include <sys/types.h>
+
 #define MAX_PASSENGERS 15
+#define LEN 50
+#define FNAME "FIFO"
 
 sem_t mutex,boat,cross_start,cross_end,mutex2,in,mutex3;
 int count=0,inside=0,fatboy,if_fuck=0;
@@ -21,41 +22,43 @@ void *passenger(void *id) {
 	printf("Jovem %d vai tentar pegar o barco!\n",tid);
 
 	sem_wait(&mutex);
-		if(count>=3) printf("Jovem %d entrou na fila, existem %d jovem(ns) na sua frente\n",tid,count-3);
-		count++;
+	if(count>=3) printf("Jovem %d entrou na fila, existem %d jovem(ns) na sua frente\n",tid,count-3);
+	count++;
 	sem_post(&mutex);
 
 	sem_wait(&boat);
-		printf("Jovem %d entrou no barco e espera que este saia\n",tid);
-		sem_wait(&mutex);
-			if(count>=3) sem_post(&cross_start);
-		sem_post(&mutex);
+	printf("Jovem %d entrou no barco e espera que este saia\n",tid);
+	sem_wait(&mutex);
+	if(count>=3) sem_post(&cross_start);
+	sem_post(&mutex);
 	sem_wait(&cross_end);
-		sleep(1);
-		printf("Jovem %d atravesssando matagal!\n",tid);
-		if (if_fuck){
-			printf("Opa! Os segurancas pegaram um ... nao vou poder entrar no show... o jeito vai ser  o telao mesmo!\n");
-			sem_post(&mutex2);
-			pthread_exit(NULL);
-		}
-		sem_wait(&in);
-			if(tid == fatboy) {
-				printf("Jovem %d preso na cerca... Shii!! Os segurancas me pegaram!\n",tid);
-				sem_wait(&mutex3);
-					if_fuck = 1;
-				sem_post(&mutex3);
-				sem_post(&mutex2);
-				//exit(1);
-			}else inside++;
-			if(inside==3) {
-				inside = 0;
-				sem_post(&mutex2);
-			}
-		sem_post(&in);
-		//return;
+	sleep(1);
+	printf("Jovem %d atravesssando matagal!\n",tid);
+	if (if_fuck){
+		printf("Opa! Os segurancas pegaram um ... nao vou poder entrar no show... o jeito vai ser o telao mesmo!\n");
+		sem_post(&mutex2);
+		pthread_exit(NULL);
+	}
+	sem_wait(&in);
+	if(tid == fatboy) {
+		printf("Jovem %d preso na cerca... Shii!! Os segurancas me pegaram!\n",tid);
+		sem_wait(&mutex3);
+		if_fuck = 1;
+		sem_post(&mutex3);
+		sem_post(&mutex2);
+		//exit(1);
+	}else inside++;
+	if(inside==3) {
+		inside = 0;
+		sem_post(&mutex2);
+	}
+	sem_post(&in);
+	pthread_exit(NULL);
+	//return;
 }
 
 void *boatman() {
+	char msg[LEN];
 	while(1) {
 		printf("Count: %d\n",count);
 		sem_wait(&cross_start);
@@ -66,18 +69,35 @@ void *boatman() {
 		printf("Barqueiro espera todos atravessarem o matagal...\n");
 		sem_wait(&mutex2);
 		sem_wait(&mutex3);
-		printf("IF FUCK: %d\n",if_fuck);
+
 		if (if_fuck){
 			printf("Opa! Problemas! Os segurancas pegaram um! Acabou meu esquema...\n");
+			mkfifo(FNAME,0660);
+			int id,fd;
 
-			//TODO: Codigo do named pipe!
+			id = fork();
+			if ( id < 0) {
+				printf("Erro na criacao do filho...Abortando...\n");
+				exit(1);
+			}else if (id == 0){
+				do {
+					fd=open(FNAME,O_WRONLY);
+					if (fd==-1) sleep(1);
+				}while (fd==-1);
 
-			exit(1);
+				sprintf(msg,"O caminho mais curto nem sempre eh o mais direito...\n");
+				write(fd,msg,strlen(msg)+1);
+				close(fd);
+
+				exit(1);
+			}else{
+				raise(SIGINT);
+			}
 		}
 		sem_post(&mutex3);
 		sleep(2);
 		sem_wait(&mutex);
-			count-=3;
+		count-=3;
 		sem_post(&mutex);
 		printf("Tudo certo! Barqueiro retorna para fazer outra viagem...\n");
 		for(int i=0;i<3;i++) sem_post(&boat);
@@ -100,8 +120,7 @@ int main() {
 
 	srand(time(NULL));
 	fatboy = rand()%15;
-	printf("OLHA O GORDO: %d\n",fatboy);
-	sleep(2);
+
 	long *taskid[MAX_PASSENGERS];
 
 	for(int i=0;i<MAX_PASSENGERS;i++) {
@@ -122,4 +141,3 @@ int main() {
 
 	return 0;
 }
-
