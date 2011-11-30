@@ -53,7 +53,14 @@ void *passenger(void *id) {
 
 	pthread_mutex_lock(&matagal);
 		sleep(1);
-		if(tid != fatboy) printf("Passei!\n");
+		if(tid != fatboy) {
+			if(if_fuck) printf("\nPegaram o gordo!\n");
+			else printf("Passei!\n");
+		}
+		else {
+			if_fuck = 1;
+			printf("\n\n************************\n GORDO SO FAZ GORDICE PQP \n\n**********************\n");
+		}
 		crossing++;
 		if(crossing==3) {
 			printf("Todo mundo passou, barqueiro retornando...\n");
@@ -61,46 +68,11 @@ void *passenger(void *id) {
 			crossing=0;
 		}
 	pthread_mutex_unlock(&matagal);
-		//return;
-	/*
-	sem_wait(&mutex);
-	if(count>=3) printf("Jovem %d entrou na fila, existem %d jovem(ns) na sua frente\n",tid,count-3);
-	count++;
-	sem_post(&mutex);
-
-	sem_wait(&boat);
-	printf("Jovem %d entrou no barco e espera que este saia\n",tid);
-	sem_wait(&mutex);
-	if(count>=3) sem_post(&cross_start);
-	sem_post(&mutex);
-	sem_wait(&cross_end);
-	sleep(1);
-	printf("Jovem %d atravesssando matagal!\n",tid);
-	if (if_fuck){
-		printf("Opa! Os segurancas pegaram um ... nao vou poder entrar no show... o jeito vai ser o telao mesmo!\n");
-		sem_post(&mutex2);
-		pthread_exit(NULL);
-	}
-	sem_wait(&in);
-	if(tid == fatboy) {
-		printf("Jovem %d preso na cerca... Shii!! Os segurancas me pegaram!\n",tid);
-		sem_wait(&mutex3);
-		if_fuck = 1;
-		sem_post(&mutex3);
-		sem_post(&mutex2);
-		//exit(1);
-	}else inside++;
-	if(inside==3) {
-		inside = 0;
-		sem_post(&mutex2);
-	}
-	sem_post(&in);
-	pthread_exit(NULL);
-	//return;*/
 }
 
 void *boatman() {
 	char msg[LEN];
+
 	while(1) {
 		pthread_mutex_lock(&mutext);
 			printf("Ahoy there sailors! Barqueiro esperando o barco encher!\n");
@@ -113,7 +85,39 @@ void *boatman() {
 		pthread_mutex_lock(&matagal);
 			printf("Esperando o pessoal atravessar...\n");
 			pthread_cond_wait(&cross_return,&matagal);
-			printf("Todos atravessaram, barqueiro retornando...\n");
+			if (if_fuck){
+				printf("Opa! Problemas! Os segurancas pegaram um! Acabou meu esquema...\n");
+				mkfifo(FNAME,0660);
+				int id,fd;
+				id = fork();
+				if ( id < 0) {
+					printf("Erro na criacao do filho...Abortando...\n");
+					exit(1);
+				}else if (id == 0){
+					do {
+						fd=open(FNAME,O_WRONLY);
+						if (fd==-1) sleep(1);
+					}while (fd==-1);
+
+					sprintf(msg,"O caminho mais curto nem sempre eh o mais direito...\n");
+					write(fd,msg,strlen(msg)+1);
+					close(fd);
+
+					exit(1);
+				}else{
+					raise(SIGINT);
+				}
+			}
+
+
+
+			/*if(if_fuck) {
+
+				printf("Pqp esse gordo fudeu o bagulho!\n\n"); exit(1);
+
+
+			}*/
+			else printf("Todos atravessaram, barqueiro retornando...\n");
 			sleep(2);
 			for(int i=0; i<3;i++) pthread_cond_signal(&line);
 		pthread_mutex_unlock(&matagal);
@@ -185,8 +189,8 @@ int main() {
 	*/
 
 	srand(time(NULL));
-	fatboy = 16;//rand()%15;
-
+	fatboy = rand()%15;
+	printf("\n\n ************************\n GORDO SO FAZ GORDICE PQP\n O GORDO E: %d \n\n**********************\n",fatboy);
 	long *taskid[MAX_PASSENGERS];
 
 	for(int i=0;i<MAX_PASSENGERS;i++) {
