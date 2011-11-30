@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /*
  * main.c
  *
@@ -5,6 +6,8 @@
  *      Author: andre
  */
 
+=======
+>>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,7 +15,14 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <time.h>
+<<<<<<< HEAD
 #include <signal.h>
+=======
+<<<<<<< HEAD
+#include <signal.h>
+=======
+>>>>>>> e6d1dbdc14c88181c3f6ea9f1392b758f9eae5d1
+>>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <sys/types.h>
@@ -21,14 +31,20 @@
 #define LEN 50
 #define FNAME "FIFO"
 
+<<<<<<< HEAD
 //sem_t mutex,boat,cross_start,cross_end,mutex2,in,mutex3;
 int count=0,inside=0,fatboy,if_fuck=0,crossing=0;
 pthread_mutex_t mutext,matagal;
 pthread_cond_t line,boat,cross_start,cross_return;
+=======
+sem_t mutex,boat,cross_start,cross_end,mutex2,in,mutex3;
+int count=0,inside=0,fatboy,if_fuck=0;
+>>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 
 void *passenger(void *id) {
 	int tid = *(int *)id;
 	printf("Jovem %d vai tentar pegar o barco!\n",tid);
+<<<<<<< HEAD
 	pthread_mutex_lock(&mutext);
 		count++;
 
@@ -63,6 +79,9 @@ void *passenger(void *id) {
 	pthread_mutex_unlock(&matagal);
 		//return;
 	/*
+=======
+
+>>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 	sem_wait(&mutex);
 	if(count>=3) printf("Jovem %d entrou na fila, existem %d jovem(ns) na sua frente\n",tid,count-3);
 	count++;
@@ -96,12 +115,17 @@ void *passenger(void *id) {
 	}
 	sem_post(&in);
 	pthread_exit(NULL);
+<<<<<<< HEAD
 	//return;*/
+=======
+	//return;
+>>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 }
 
 void *boatman() {
 	char msg[LEN];
 	while(1) {
+<<<<<<< HEAD
 		pthread_mutex_lock(&mutext);
 			printf("Ahoy there sailors! Barqueiro esperando o barco encher!\n");
 			pthread_cond_wait(&cross_start,&mutext);
@@ -124,6 +148,10 @@ void *boatman() {
 		//printf("Count: %d\n",count);
 
 		/*sem_wait(&cross_start);
+=======
+		printf("Count: %d\n",count);
+		sem_wait(&cross_start);
+>>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 		printf("Barqueiro recolhe ajuda para a comunidade e sai com o barco...\n");
 		sleep(3);
 		printf("Barqueiro chega na outra margem e libera os 3 passageiros...\n");
@@ -135,8 +163,18 @@ void *boatman() {
 		if (if_fuck){
 			printf("Opa! Problemas! Os segurancas pegaram um! Acabou meu esquema...\n");
 			mkfifo(FNAME,0660);
+<<<<<<< HEAD
 			int id,fd;
 
+=======
+<<<<<<< HEAD
+			int id,fd;
+
+=======
+			int id;
+			
+>>>>>>> e6d1dbdc14c88181c3f6ea9f1392b758f9eae5d1
+>>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 			id = fork();
 			if ( id < 0) {
 				printf("Erro na criacao do filho...Abortando...\n");
@@ -146,11 +184,25 @@ void *boatman() {
 					fd=open(FNAME,O_WRONLY);
 					if (fd==-1) sleep(1);
 				}while (fd==-1);
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 
 				sprintf(msg,"O caminho mais curto nem sempre eh o mais direito...\n");
 				write(fd,msg,strlen(msg)+1);
 				close(fd);
 
+<<<<<<< HEAD
+=======
+=======
+				
+				sprintf(msg,"O caminho mais curto nem sempre eh o mais direito...\n");
+				write(fd,msg,strlen(msg)+1);
+				close(fd);
+				
+>>>>>>> e6d1dbdc14c88181c3f6ea9f1392b758f9eae5d1
+>>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 				exit(1);
 			}else{
 				raise(SIGINT);
@@ -162,7 +214,11 @@ void *boatman() {
 		count-=3;
 		sem_post(&mutex);
 		printf("Tudo certo! Barqueiro retorna para fazer outra viagem...\n");
+<<<<<<< HEAD
 		for(int i=0;i<3;i++) sem_post(&boat);*/
+=======
+		for(int i=0;i<3;i++) sem_post(&boat);
+>>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 	}
 	//return;
 }
@@ -170,22 +226,34 @@ void *boatman() {
 
 int main() {
 
+<<<<<<< HEAD
 	pthread_mutex_init(&mutext,NULL);
 	pthread_cond_init(&line,NULL);
 	pthread_cond_init(&boat,NULL);
 	pthread_cond_init(&cross_start,NULL);
 	pthread_cond_init(&cross_return,NULL);
 	/*sem_init(&mutex,0,1);
+=======
+
+	sem_init(&mutex,0,1);
+>>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 	sem_init(&mutex2,0,0);
 	sem_init(&cross_start,0,0);
 	sem_init(&cross_end,0,0);
 	sem_init(&boat,0,3);
 	sem_init(&in,0,1);
 	sem_init(&mutex3,0,1);
+<<<<<<< HEAD
 	*/
 
 	srand(time(NULL));
 	fatboy = 16;//rand()%15;
+=======
+
+
+	srand(time(NULL));
+	fatboy = rand()%15;
+>>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 
 	long *taskid[MAX_PASSENGERS];
 
@@ -195,11 +263,19 @@ int main() {
 	}
 
 	pthread_t carrier,passengers[MAX_PASSENGERS];
+<<<<<<< HEAD
 	pthread_create(&carrier,NULL,boatman,NULL);
 	for(int i=0;i<MAX_PASSENGERS;i++) {
 		pthread_create(&passengers[i],NULL,passenger,taskid[i]);
 	}
 
+=======
+
+	for(int i=0;i<MAX_PASSENGERS;i++) {
+		pthread_create(&passengers[i],NULL,passenger,taskid[i]);
+	}
+	pthread_create(&carrier,NULL,boatman,NULL);
+>>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 	for(int i=0;i<MAX_PASSENGERS;i++) {
 		pthread_join(passengers[i],NULL);
 	}
