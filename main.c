@@ -1,28 +1,17 @@
-<<<<<<< HEAD
 /*
  * main.c
  *
- *  Created on: Nov 29, 2011
- *      Author: andre
+ *  Created on: Nov 20, 2011
+ *      Authors: Andre, Juan, Thaylo
  */
 
-=======
->>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <semaphore.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <time.h>
-<<<<<<< HEAD
 #include <signal.h>
-=======
-<<<<<<< HEAD
-#include <signal.h>
-=======
->>>>>>> e6d1dbdc14c88181c3f6ea9f1392b758f9eae5d1
->>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <sys/types.h>
@@ -31,251 +20,152 @@
 #define LEN 50
 #define FNAME "FIFO"
 
-<<<<<<< HEAD
-//sem_t mutex,boat,cross_start,cross_end,mutex2,in,mutex3;
-int count=0,inside=0,fatboy,if_fuck=0,crossing=0;
+int count=0,inside=0,bottleneck,fail=0,crossing=0;
 pthread_mutex_t mutext,matagal;
 pthread_cond_t line,boat,cross_start,cross_return;
-=======
-sem_t mutex,boat,cross_start,cross_end,mutex2,in,mutex3;
-int count=0,inside=0,fatboy,if_fuck=0;
->>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 
 void *passenger(void *id) {
 	int tid = *(int *)id;
 	printf("Jovem %d vai tentar pegar o barco!\n",tid);
-<<<<<<< HEAD
+	/*
+	 * Primeira condicao de espera
+	 */
 	pthread_mutex_lock(&mutext);
+		// Variavel count verifica o numero de jovens ja no esquema, caso seja maior ou igual a 4, o jovem em questao
+		// deve ir pra fila
 		count++;
-
 		if(count >= 4) {
 			printf("Jovem %d entrou na fila, existem %d jovem(ns) na sua frente\n",tid,count-4);
 			pthread_cond_wait(&line,&mutext);
-			//printf("passou1\n\n");
 		}
+		// Depois de ser liberado da fila, a variavel inside coordena quantos jovens estao no barco
 		inside++;
-		//count--;
 		printf("Jovem %d entrou no barco e espera que este saia\n",tid);
+		// caso o barco esteja cheio, sinaliza para o barqueiro comecar a travessia e espera o sinal de que a travessia terminou
 		if(inside == 3) {
-			printf("Barco cheio, vou sinalizar para o barqueiro\n");
 			pthread_cond_signal(&cross_start);
-			inside=0;
 		}
 		pthread_cond_wait(&boat,&mutext);
-		printf("Jovem %d tentando atravessar o matagal aqui!\n",tid);
+		printf("Jovem %d sai com o barco.\n",tid);
 	pthread_mutex_unlock(&mutext);
 
 
-
+	/*
+	 * Estagio do matagal
+	 */
 	pthread_mutex_lock(&matagal);
+		printf("Jovem %d tentando atravessar o matagal...\n",tid);
 		sleep(1);
-		if(tid != fatboy) printf("Passei!\n");
+		// Checa se ele e' o que sera pego
+		if(tid != bottleneck) {
+			//checa se alguem ja foi pego
+			if(fail) printf("Opa! Os seguranças pegaram um ... não vou poder entrar no show... o jeito vai ser o telão mesmo!\n");
+			else printf("Jovem %d entrou no show!\n",tid);
+		}
+		// Se alguem foi pego
+		else {
+			fail = 1;
+			printf("Jovem %d preso na cerca... Shii! Os segurancas me pegaram!\n",tid);
+		}
 		crossing++;
+		// Sinaliza para o barqueiro retornar
 		if(crossing==3) {
-			printf("Todo mundo passou, barqueiro retornando...\n");
 			pthread_cond_signal(&cross_return);
 			crossing=0;
 		}
 	pthread_mutex_unlock(&matagal);
-		//return;
-	/*
-=======
-
->>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
-	sem_wait(&mutex);
-	if(count>=3) printf("Jovem %d entrou na fila, existem %d jovem(ns) na sua frente\n",tid,count-3);
-	count++;
-	sem_post(&mutex);
-
-	sem_wait(&boat);
-	printf("Jovem %d entrou no barco e espera que este saia\n",tid);
-	sem_wait(&mutex);
-	if(count>=3) sem_post(&cross_start);
-	sem_post(&mutex);
-	sem_wait(&cross_end);
-	sleep(1);
-	printf("Jovem %d atravesssando matagal!\n",tid);
-	if (if_fuck){
-		printf("Opa! Os segurancas pegaram um ... nao vou poder entrar no show... o jeito vai ser o telao mesmo!\n");
-		sem_post(&mutex2);
-		pthread_exit(NULL);
-	}
-	sem_wait(&in);
-	if(tid == fatboy) {
-		printf("Jovem %d preso na cerca... Shii!! Os segurancas me pegaram!\n",tid);
-		sem_wait(&mutex3);
-		if_fuck = 1;
-		sem_post(&mutex3);
-		sem_post(&mutex2);
-		//exit(1);
-	}else inside++;
-	if(inside==3) {
-		inside = 0;
-		sem_post(&mutex2);
-	}
-	sem_post(&in);
-	pthread_exit(NULL);
-<<<<<<< HEAD
-	//return;*/
-=======
-	//return;
->>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 }
 
 void *boatman() {
 	char msg[LEN];
+
 	while(1) {
-<<<<<<< HEAD
 		pthread_mutex_lock(&mutext);
-			printf("Ahoy there sailors! Barqueiro esperando o barco encher!\n");
-			pthread_cond_wait(&cross_start,&mutext);
-			printf("Travessia vai comecar...");
+			// verifica se o barco esta cheio. Senao, espera encher.
+			if(inside!=3) pthread_cond_wait(&cross_start,&mutext);
+			printf("Barqueiro recolhe ajuda para a comunidade e sai com o barco...\n");
 			sleep(3);
+			printf("Barqueiro chega na outra margem e espera todos atravessarem o matagal...\n");
+			// manda o sinal para os processos no barco
 			pthread_cond_broadcast(&boat);
 		pthread_mutex_unlock(&mutext);
 
 		pthread_mutex_lock(&matagal);
-			printf("Esperando o pessoal atravessar...\n");
+			// Espera a sinalizacao dos jovens atravessarem
 			pthread_cond_wait(&cross_return,&matagal);
-			printf("Todos atravessaram, barqueiro retornando...\n");
+			// Caso haja alguem agarrado, fim do esquema
+			if (fail){
+				printf("Opa! Problemas! Os segurancas pegaram um! Acabou meu esquema...\n");
+				// Criacao do FIFO
+				mkfifo(FNAME,0660);
+				int id,fd;
+				// Cria um filho para realizar a leitura e evitar que este processo fique bloqueado eternamente
+				id = fork();
+				if ( id < 0) {
+					printf("Erro na criacao do filho...Abortando...\n");
+					exit(1);
+				}else if (id == 0){
+					do {
+						fd=open(FNAME,O_WRONLY);
+						if (fd==-1) sleep(1);
+					}while (fd==-1);
+
+					sprintf(msg,"O caminho mais curto nem sempre é o mais direito...\n");
+					write(fd,msg,strlen(msg)+1);
+					close(fd);
+
+					exit(1);
+				}else{
+					// Barqueiro se mata
+					raise(SIGINT);
+				}
+			}
+
+
+			else printf("Tudo certo! Barqueiro retorna para fazer outra viagem...\n");
 			sleep(2);
+			inside=0;
+			// Libera 3 jovens da fila para o barco
 			for(int i=0; i<3;i++) pthread_cond_signal(&line);
 		pthread_mutex_unlock(&matagal);
 
 		pthread_mutex_lock(&mutext);
+			// diminui o total de jovens
 			count-=3;
 		pthread_mutex_unlock(&mutext);
-		//printf("Count: %d\n",count);
-
-		/*sem_wait(&cross_start);
-=======
-		printf("Count: %d\n",count);
-		sem_wait(&cross_start);
->>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
-		printf("Barqueiro recolhe ajuda para a comunidade e sai com o barco...\n");
-		sleep(3);
-		printf("Barqueiro chega na outra margem e libera os 3 passageiros...\n");
-		for(int i=0;i<3;i++) sem_post(&cross_end);
-		printf("Barqueiro espera todos atravessarem o matagal...\n");
-		sem_wait(&mutex2);
-		sem_wait(&mutex3);
-
-		if (if_fuck){
-			printf("Opa! Problemas! Os segurancas pegaram um! Acabou meu esquema...\n");
-			mkfifo(FNAME,0660);
-<<<<<<< HEAD
-			int id,fd;
-
-=======
-<<<<<<< HEAD
-			int id,fd;
-
-=======
-			int id;
-			
->>>>>>> e6d1dbdc14c88181c3f6ea9f1392b758f9eae5d1
->>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
-			id = fork();
-			if ( id < 0) {
-				printf("Erro na criacao do filho...Abortando...\n");
-				exit(1);
-			}else if (id == 0){
-				do {
-					fd=open(FNAME,O_WRONLY);
-					if (fd==-1) sleep(1);
-				}while (fd==-1);
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
-
-				sprintf(msg,"O caminho mais curto nem sempre eh o mais direito...\n");
-				write(fd,msg,strlen(msg)+1);
-				close(fd);
-
-<<<<<<< HEAD
-=======
-=======
-				
-				sprintf(msg,"O caminho mais curto nem sempre eh o mais direito...\n");
-				write(fd,msg,strlen(msg)+1);
-				close(fd);
-				
->>>>>>> e6d1dbdc14c88181c3f6ea9f1392b758f9eae5d1
->>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
-				exit(1);
-			}else{
-				raise(SIGINT);
-			}
-		}
-		sem_post(&mutex3);
-		sleep(2);
-		sem_wait(&mutex);
-		count-=3;
-		sem_post(&mutex);
-		printf("Tudo certo! Barqueiro retorna para fazer outra viagem...\n");
-<<<<<<< HEAD
-		for(int i=0;i<3;i++) sem_post(&boat);*/
-=======
-		for(int i=0;i<3;i++) sem_post(&boat);
->>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
 	}
-	//return;
+
 }
 
 
 int main() {
 
-<<<<<<< HEAD
 	pthread_mutex_init(&mutext,NULL);
 	pthread_cond_init(&line,NULL);
 	pthread_cond_init(&boat,NULL);
 	pthread_cond_init(&cross_start,NULL);
 	pthread_cond_init(&cross_return,NULL);
-	/*sem_init(&mutex,0,1);
-=======
 
-	sem_init(&mutex,0,1);
->>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
-	sem_init(&mutex2,0,0);
-	sem_init(&cross_start,0,0);
-	sem_init(&cross_end,0,0);
-	sem_init(&boat,0,3);
-	sem_init(&in,0,1);
-	sem_init(&mutex3,0,1);
-<<<<<<< HEAD
-	*/
-
+	// gera id do jovem que vai ficar agarrado
 	srand(time(NULL));
-	fatboy = 16;//rand()%15;
-=======
-
-
-	srand(time(NULL));
-	fatboy = rand()%15;
->>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
-
+	bottleneck = rand()%15;
+	// Geracao dos ids
 	long *taskid[MAX_PASSENGERS];
-
 	for(int i=0;i<MAX_PASSENGERS;i++) {
 		taskid[i] = (long *) malloc(sizeof(long));
 		*taskid[i] = i;
 	}
 
+
 	pthread_t carrier,passengers[MAX_PASSENGERS];
-<<<<<<< HEAD
+
+	// Criacao das threads
 	pthread_create(&carrier,NULL,boatman,NULL);
 	for(int i=0;i<MAX_PASSENGERS;i++) {
 		pthread_create(&passengers[i],NULL,passenger,taskid[i]);
 	}
 
-=======
-
-	for(int i=0;i<MAX_PASSENGERS;i++) {
-		pthread_create(&passengers[i],NULL,passenger,taskid[i]);
-	}
-	pthread_create(&carrier,NULL,boatman,NULL);
->>>>>>> af554ce5a9e0d9a84676e119a8bfcc8ac242a03a
+	// Espera pelas threads
 	for(int i=0;i<MAX_PASSENGERS;i++) {
 		pthread_join(passengers[i],NULL);
 	}
